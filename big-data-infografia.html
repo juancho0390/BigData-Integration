@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html,body{margin:0}</style>
+<title>Big Data, del dato al valor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+/* Concepto: del caos al orden. Partículas cian (dato crudo) que se alinean en carriles y se vuelven ámbar (valor).
+   La línea de tiempo alterna tarjetas arriba y abajo de un eje continuo coloreado por era. */
+:root{
+  --bg:#0a1020; --surface:#111a31; --surface-2:#0d1528; --line:#26335a;
+  --ink:#e9eefb; --muted:#9aa8c6;
+  --cyan:#2fd6d1; --violet:#9d8fff; --amber:#ffb54d; --coral:#ff7d6d; --lime:#8fe27c;
+  --on-accent:#06101f;
+  --shadow:0 12px 32px rgba(0,0,0,.4);
+  --f-display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --f-body:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f2f5fb; --surface:#ffffff; --surface-2:#e7edf8; --line:#cfd8ea;
+    --ink:#0d1630; --muted:#475577;
+    --cyan:#087c79; --violet:#5642d6; --amber:#a45a00; --coral:#c23a2a; --lime:#2b7a2f;
+    --on-accent:#ffffff;
+    --shadow:0 12px 28px rgba(20,35,80,.13);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f2f5fb; --surface:#ffffff; --surface-2:#e7edf8; --line:#cfd8ea;
+  --ink:#0d1630; --muted:#475577;
+  --cyan:#087c79; --violet:#5642d6; --amber:#a45a00; --coral:#c23a2a; --lime:#2b7a2f;
+  --on-accent:#ffffff;
+  --shadow:0 12px 28px rgba(20,35,80,.13);
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:clip}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+h1,h2,h3,h4,p,ol,ul{margin:0}
+
+.wrap{width:100%;max-width:1180px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- Encabezado ---------- */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+#net{position:absolute;inset:0;width:100%;height:100%;display:block;
+  -webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.5) 35%,#000 65%);
+  mask-image:linear-gradient(90deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.5) 35%,#000 65%)}
+.hero-in{position:relative;padding-block:clamp(52px,8vw,100px) clamp(44px,6vw,76px)}
+.hero .eyebrow{margin-bottom:20px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2.05rem,6.2vw,4.3rem);line-height:1.06;letter-spacing:-.02em;text-wrap:balance;margin-bottom:22px}
+h1 .d{color:var(--cyan)}
+h1 .v{color:var(--amber)}
+.lead{max-width:50ch;font-size:clamp(1.02rem,1.9vw,1.2rem);color:var(--muted);margin-bottom:30px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chips a{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink);
+  border:1px solid var(--line);padding:9px 14px;border-radius:999px;background:color-mix(in srgb,var(--surface) 82%,transparent);transition:border-color .2s,color .2s}
+.chips a:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* ---------- Secciones ---------- */
+.sec{padding-block:clamp(56px,9vw,104px);scroll-margin-top:12px}
+.sec-head{max-width:60ch;margin-bottom:clamp(28px,4vw,48px)}
+.sec-head .eyebrow{margin-bottom:14px}
+h2{font-family:var(--f-display);font-weight:500;font-size:clamp(1.55rem,3.6vw,2.4rem);line-height:1.15;letter-spacing:-.015em;text-wrap:balance;margin-bottom:14px}
+.sec-head p{color:var(--muted)}
+
+/* ---------- Línea de tiempo (escritorio) ---------- */
+.era-strip{display:grid;grid-template-columns:35fr 40fr 25fr;margin-bottom:30px}
+.era-strip div{border-top:3px solid var(--era);padding:9px 10px 0 0}
+.era-strip b{display:block;font-family:var(--f-mono);font-weight:500;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--era)}
+.era-strip span{display:block;color:var(--muted);font-size:.84rem}
+
+.tl-track{list-style:none;padding:0;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:auto 64px auto;position:relative}
+.tl-track::before{content:"";grid-row:2;grid-column:1/-1;align-self:center;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--amber) 0 35%,var(--cyan) 35% 75%,var(--violet) 75% 100%)}
+.tl-track::after{content:"";grid-row:2;grid-column:10;justify-self:end;align-self:center;width:0;height:0;
+  border-left:12px solid var(--violet);border-top:8px solid transparent;border-bottom:8px solid transparent}
+.era-head{display:none}
+.tl-item{position:relative;grid-column:calc(var(--i) + 1) / span 2;padding-inline:6px}
+.tl-item.up{grid-row:1;align-self:end}
+.tl-item.down{grid-row:3;align-self:start}
+.tl-item::before{content:"";position:absolute;left:50%;width:2px;height:32px;background:var(--era);transform:translateX(-50%);opacity:.75}
+.tl-item.up::before{bottom:-32px}
+.tl-item.down::before{top:-32px}
+.node{position:absolute;left:50%;width:18px;height:18px;border-radius:50%;background:var(--bg);border:3px solid var(--era);z-index:2;transition:scale .25s,background .25s}
+.tl-item.up .node{bottom:-32px;transform:translate(-50%,50%)}
+.tl-item.down .node{top:-32px;transform:translate(-50%,-50%)}
+.tl-item.active .node{scale:1.4;background:var(--era)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 14px 16px;cursor:pointer;transition:border-color .2s,background .2s}
+.card:hover,.tl-item.active .card{border-color:var(--era);background:color-mix(in srgb,var(--era) 10%,var(--surface))}
+.card:focus-visible{outline:2px solid var(--era)}
+.card-top{display:flex;align-items:center;gap:10px}
+.yr{font-family:var(--f-mono);font-weight:500;font-size:.8rem;letter-spacing:.04em;color:var(--era)}
+.cico{margin-left:auto;display:grid;color:var(--era)}
+.cico svg{width:22px;height:22px}
+.chev{display:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .25s;margin:-3px 4px 0 2px}
+.card h3{font-size:1rem;line-height:1.25;font-weight:650;margin:.6em 0 .4em}
+.card p{font-size:.86rem;line-height:1.5;color:var(--muted)}
+.more{display:none}
+
+.tl-panel{margin-top:40px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px 36px;align-items:center;padding:24px 28px;border-radius:16px;
+  border:1px solid var(--era);background:color-mix(in srgb,var(--era) 9%,var(--surface))}
+.tp-left{display:flex;flex-direction:column;gap:12px;align-items:flex-start;min-width:150px}
+.pill{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--era);color:var(--era)}
+.big{font-family:var(--f-display);font-weight:500;font-size:clamp(2rem,4.2vw,3.1rem);line-height:1;color:var(--era);letter-spacing:-.02em}
+.tp-right h3{font-size:1.2rem;font-weight:650;margin-bottom:6px}
+.tp-right p{max-width:64ch;color:var(--ink)}
+.tl-panel.swap .tp-left,.tl-panel.swap .tp-right{animation:panelIn .35s ease}
+@keyframes panelIn{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Necesidades ---------- */
+.needs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:40px}
+.ngroup{--c:var(--cyan);min-width:0}
+.ngroup h3{font-family:var(--f-mono);font-weight:500;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--c);padding-bottom:12px;border-bottom:2px solid var(--c)}
+.nrow{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
+.nrow:last-child{border-bottom:0}
+.nico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 13%,var(--surface))}
+.nico svg{width:22px;height:22px}
+.nrow h4{font-size:1rem;font-weight:650;margin:2px 0 4px}
+.nrow p{color:var(--muted);font-size:.9rem}
+
+/* ---------- Aplicaciones ---------- */
+.apps-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.fchip{--c:var(--ink);display:inline-flex;align-items:center;gap:8px;font:500 .84rem var(--f-body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.fchip i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.fchip:hover{border-color:var(--c)}
+.fchip[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:var(--on-accent)}
+.fchip[aria-pressed="true"] i{background:var(--on-accent)}
+.count{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:14px}
+.app{--c:var(--cyan);display:flex;flex-direction:column;gap:12px;min-width:0;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface);transition:transform .25s,border-color .25s,box-shadow .25s,opacity .3s}
+.app:hover{transform:translateY(-3px);border-color:var(--c);box-shadow:var(--shadow)}
+.app.dim{opacity:.25}
+.aico{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--c);border:1.5px solid var(--c)}
+.aico svg{width:22px;height:22px}
+.app h3{font-size:1.05rem;font-weight:650}
+.app p{color:var(--muted);font-size:.9rem;flex:1}
+.acat{display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.acat i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+
+/* ---------- Las 5 V ---------- */
+.vband{background:var(--surface-2);border-block:1px solid var(--line)}
+.vgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.vcard{--c:var(--cyan);grid-column:span 2;display:flex;flex-direction:column;gap:12px;min-width:0;padding:18px 18px 22px;border-radius:18px;border:1px solid var(--line);background:var(--surface);cursor:pointer;transition:border-color .2s}
+.vcard:nth-child(n+4){grid-column:span 3}
+.vcard:hover{border-color:var(--c)}
+.vtop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+.vtag{color:var(--muted)}
+.vhint{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
+.vhint svg{width:9px;height:9px}
+.fig{appearance:none;border:0;width:100%;height:116px;padding:8px;border-radius:12px;cursor:pointer;color:var(--c);background:color-mix(in srgb,var(--c) 11%,var(--surface-2));display:block}
+.fig svg{width:100%;height:100%;display:block}
+.vname{font-family:var(--f-display);font-weight:500;font-size:1.3rem;line-height:1.1;color:var(--c)}
+.vdef{font-size:.95rem}
+.vex{margin-top:auto;padding-top:12px;border-top:1px dashed var(--line);color:var(--muted);font-size:.88rem}
+.vex b{display:block;font-family:var(--f-mono);font-weight:500;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:4px}
+.vnote{margin-top:22px;color:var(--muted);font-size:.9rem;max-width:70ch}
+.blk,.shp,.spk,.gem,.shield{transform-box:fill-box;transform-origin:center}
+.blk{opacity:var(--o,1)}
+.needle{transform:rotate(40deg);transform-origin:60px 72px}
+.vcard.play .blk{animation:drop .5s cubic-bezier(.2,.9,.3,1.2) both;animation-delay:calc(var(--k)*28ms)}
+.vcard.play .needle{animation:sweep 1.3s cubic-bezier(.2,.8,.2,1) both}
+.vcard.play .arc{animation:fill 1.3s cubic-bezier(.2,.8,.2,1) both}
+.vcard.play .streak{animation:streak .8s ease-out both}
+.vcard.play .shp{animation:spin .8s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--k)*80ms)}
+.vcard.play .chk{animation:draw .8s ease both .15s}
+.vcard.play .shield{animation:pulse .7s ease}
+.vcard.play .gem{animation:pop .6s cubic-bezier(.3,1.5,.5,1) both}
+.vcard.play .spk{animation:twinkle .9s ease both;animation-delay:calc(.2s + var(--k)*120ms)}
+@keyframes drop{from{transform:translateY(-26px);opacity:0}to{transform:none;opacity:var(--o,1)}}
+@keyframes sweep{from{transform:rotate(-90deg)}to{transform:rotate(40deg)}}
+@keyframes fill{from{stroke-dashoffset:1}to{stroke-dashoffset:.28}}
+@keyframes streak{from{transform:translateX(-14px);opacity:0}to{transform:none;opacity:.55}}
+@keyframes spin{from{transform:rotate(-180deg) scale(.2);opacity:0}to{transform:none;opacity:1}}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes pulse{40%{transform:scale(1.07)}}
+@keyframes pop{from{transform:scale(.7)}to{transform:none}}
+@keyframes twinkle{0%{transform:scale(0) rotate(0)}60%{transform:scale(1.5) rotate(45deg)}100%{transform:scale(1) rotate(0)}}
+
+/* ---------- Cierre ---------- */
+.closing{padding-block:clamp(64px,10vw,120px)}
+.statement{font-family:var(--f-display);font-weight:500;font-size:clamp(1.35rem,3.3vw,2.2rem);line-height:1.3;letter-spacing:-.01em;max-width:24em;text-wrap:balance;margin-bottom:48px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:28px}
+.stat{--c:var(--cyan);border-top:1px solid var(--line);padding-top:16px;min-width:0}
+.stat b{font-family:var(--f-display);font-weight:500;font-size:clamp(2rem,4vw,3rem);line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
+.stat b small{font-family:var(--f-mono);font-size:.34em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-left:.6em}
+.stat p{margin-top:12px;color:var(--muted);font-size:.92rem}
+.foot{padding-block:0 40px;color:var(--muted);font-size:.8rem;max-width:1180px}
+
+/* ---------- Aparición al desplazarse ---------- */
+html.js .rv{opacity:.55;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
+html.js .rv.in{opacity:1;transform:none}
+
+/* ---------- Móvil y tablet: línea de tiempo vertical ---------- */
+@media (max-width:959px){
+  .era-strip,.tl-panel{display:none}
+  .tl-track{display:block;padding-left:30px}
+  .tl-track::before,.tl-track::after{display:none}
+  .era-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:26px 0 14px;color:var(--era)}
+  .era-head:first-child{padding-top:0}
+  .era-head b{font-family:var(--f-mono);font-weight:500;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase}
+  .era-head span{font-size:.82rem;color:var(--muted)}
+  .tl-item{padding:0 0 14px}
+  .tl-item::before{left:-23px;top:0;bottom:0;height:auto;width:2px;transform:none;opacity:.55}
+  .tl-item.up::before,.tl-item.down::before{top:0;bottom:0}
+  .tl-item.up .node,.tl-item.down .node{left:-23px;top:22px;bottom:auto;transform:translate(-50%,-50%)}
+  .chev{display:block}
+  .tl-item.active .chev{transform:rotate(225deg);margin-top:3px}
+  .more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+  .tl-item.active .more{grid-template-rows:1fr}
+  .more>div{overflow:hidden}
+  .more p{padding-top:12px;color:var(--ink)}
+}
+@media (max-width:719px){
+  .vgrid{grid-template-columns:1fr}
+  .vcard,.vcard:nth-child(n+4){grid-column:auto}
+}
+@media (min-width:1100px){
+  .vgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .vcard,.vcard:nth-child(n+4){grid-column:auto}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html.js .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero" id="inicio">
+  <canvas id="net" aria-hidden="true"></canvas>
+  <div class="wrap hero-in">
+    <p class="eyebrow">Infografía interactiva · Datos masivos</p>
+    <h1>Big Data: del <span class="d">dato</span> al <span class="v">valor</span></h1>
+    <p class="lead">De las tablas de los mainframes a la IA generativa: cómo evolucionó, qué exige y dónde se aplica.</p>
+    <nav class="chips" aria-label="Secciones de la infografía">
+      <a href="#linea-de-tiempo">Línea de tiempo</a>
+      <a href="#necesidades">Necesidades</a>
+      <a href="#aplicaciones">Aplicaciones</a>
+      <a href="#cinco-v">Las 5 V</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="sec" id="linea-de-tiempo">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <p class="eyebrow">Cronología · 1970 a hoy</p>
+        <h2>Cómo creció el Big Data</h2>
+        <p>Nueve hitos en tres eras. Pasa el cursor o toca un hito para ver más detalle.</p>
+      </div>
+      <div class="rv">
+        <div class="era-strip" id="era-strip"></div>
+        <ol class="tl-track" id="tl-track"></ol>
+        <div class="tl-panel" id="tl-panel" aria-live="polite">
+          <div class="tp-left"><span class="pill" id="tp-era"></span><div class="big" id="tp-yr"></div></div>
+          <div class="tp-right"><h3 id="tp-t"></h3><p id="tp-d"></p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="necesidades">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <p class="eyebrow">Requisitos · Qué hace falta</p>
+        <h2>Lo que necesita el Big Data para funcionar</h2>
+        <p>Nueve necesidades agrupadas en infraestructura, manejo de datos y confianza.</p>
+      </div>
+      <div class="needs rv" id="needs"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="aplicaciones">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <p class="eyebrow">Usos · Dónde se aplica</p>
+        <h2>Doce campos donde los datos masivos ya trabajan</h2>
+        <p>Filtra por tipo de sector para resaltar los campos relacionados.</p>
+      </div>
+      <div class="rv">
+        <div class="apps-top">
+          <div class="filters" id="filters" role="group" aria-label="Filtrar por tipo de sector"></div>
+          <span class="count" id="count" aria-live="polite"></span>
+        </div>
+        <div class="apps" id="apps"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec vband" id="cinco-v">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <p class="eyebrow">Marco conceptual · Las características</p>
+        <h2>Las 5 V del Big Data</h2>
+        <p>Laney definió las tres primeras en 2001. Veracidad y valor se sumaron después. Toca cada tarjeta para animar su metáfora.</p>
+      </div>
+      <div class="vgrid rv" id="vgrid"></div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap rv">
+      <p class="statement">Un dato aislado dice poco. Almacenado a escala, procesado a tiempo y bien gobernado, ayuda a decidir.</p>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Resumen educativo. Hitos basados en el artículo de Codd (1970), la nota de Laney (2001), los artículos de Google (2003 y 2004) y el proyecto Apache Hadoop.</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var mqM=matchMedia('(max-width: 959px)');
+
+/* ---------- Íconos (trazo uniforme 1.7) ---------- */
+var ICONS={
+  db:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+  warehouse:'<path d="M3 10l9-6 9 6v10H3z"/><path d="M8 20v-6h8v6"/>',
+  cube:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/>',
+  split:'<circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h4l4-6h2M11 12l4 6h2"/>',
+  cluster:'<rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="11" width="18" height="5" rx="1"/><path d="M7 6.5h.01M7 13.5h.01M12 16v4M6 20h12"/>',
+  bubble:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  cloud:'<path d="M7 18a4 4 0 010-8 5 5 0 019.6-1.2A3.8 3.8 0 0117 18z"/>',
+  network:'<circle cx="12" cy="12" r="2.5"/><circle cx="4.5" cy="6" r="1.8"/><circle cx="19.5" cy="6" r="1.8"/><circle cx="4.5" cy="18" r="1.8"/><circle cx="19.5" cy="18" r="1.8"/><path d="M10 10.5L5.8 7.2M14 10.5l4.2-3.3M10 13.5l-4.2 3.3M14 13.5l4.2 3.3"/>',
+  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
+  disk:'<rect x="3" y="5" width="18" height="6" rx="1.5"/><rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M7 8h.01M7 16h.01"/>',
+  chip:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/><rect x="10" y="10" width="4" height="4"/>',
+  pulse:'<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>',
+  filter:'<path d="M4 5h16l-6 7.5V19l-4 2v-8.5z"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  scale:'<path d="M12 4v16M6 20h12M5 7h14"/><path d="M5 7l-3 7a3.5 3.5 0 006 0zM19 7l-3 7a3.5 3.5 0 006 0z"/>',
+  link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-1-1.5-1.5-2.8-1.5-1.6 0-2.8.8-2.8 2 0 3 5.8 1.5 5.8 4.3 0 1.2-1.2 2-3 2-1.4 0-2.5-.6-3-1.7M12 6v1.7M12 16.3V18"/>',
+  heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/><path d="M7 12h3l1.5-2.5 2 4L15 12h2"/>',
+  bank:'<path d="M3 9l9-5 9 5"/><path d="M5 9v9M9.5 9v9M14.5 9v9M19 9v9M3 20h18"/>',
+  cart:'<path d="M3 4h2.5l2 11h10l2-8H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+  truck:'<path d="M2 6h11v10H2z"/><path d="M13 9h4l3 3v4h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>',
+  city:'<path d="M4 21V9l6-3v15M10 21V4l10 4v13M3 21h18"/><path d="M13 11h2M13 15h2M17 11h.01M17 15h.01M7 12h.01M7 16h.01"/>',
+  cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5M22 9v6"/>',
+  sprout:'<path d="M12 21v-8"/><path d="M12 13c0-4 2.5-6.5 7-7 0 4.5-2.5 7-7 7z"/><path d="M12 15c0-3-2-5-6-5.2 0 3.4 2 5.2 6 5.2z"/>',
+  antenna:'<path d="M12 12v9"/><circle cx="12" cy="10" r="1.6"/><path d="M8 6a5.7 5.7 0 000 8M16 6a5.7 5.7 0 010 8M5 3.5a9.5 9.5 0 000 13M19 3.5a9.5 9.5 0 010 13"/>',
+  bolt:'<path d="M13 3L5 13.5h6L10 21l9-11.5h-6z"/>',
+  megaphone:'<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17 9a4 4 0 010 6M19.5 6.5a8 8 0 010 11"/>',
+  flask:'<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 001.3 2h12.4a1.5 1.5 0 001.3-2L14 9V3"/><path d="M7.5 15h9"/>'
+};
+function ico(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>'}
+
+/* ---------- Datos ---------- */
+var eras=[
+  {name:'Origen',range:'1970 – 2001',c:'--amber'},
+  {name:'Expansión',range:'2003 – 2014',c:'--cyan'},
+  {name:'Era inteligente',range:'2015 – hoy',c:'--violet'}
+];
+var ms=[
+  {era:0,yr:'1960–70',ic:'db',t:'Bases de datos relacionales',
+   d:'Los mainframes guardan datos en tablas. Edgar Codd propone el modelo relacional en 1970.',
+   m:'IBM impulsa los primeros sistemas y SQL se desarrolla a mediados de los años 70. Los datos eran estructurados, de tamaño moderado y se procesaban en una sola máquina.'},
+  {era:0,yr:'1990s',ic:'warehouse',t:'Data warehouses e internet',
+   d:'Las empresas centralizan datos históricos para analizarlos, mientras la web empieza a generar información a gran escala.',
+   m:'Bill Inmon y Ralph Kimball popularizan el almacén de datos y la inteligencia de negocios. Aparecen los procesos ETL y los cubos OLAP.'},
+  {era:0,yr:'2001',ic:'cube',t:'Las 3V de Laney',
+   d:'Doug Laney describe volumen, velocidad y variedad como los grandes retos de gestionar datos.',
+   m:'Su nota de 2001 sobre gestión de datos en el comercio electrónico fijó el marco que otros autores ampliaron después con veracidad y valor.'},
+  {era:1,yr:'2003–04',ic:'split',t:'Google: GFS y MapReduce',
+   d:'Google publica sus artículos sobre un sistema de archivos distribuido y un modelo de cómputo en paralelo.',
+   m:'Demuestran que miles de computadores económicos pueden trabajar como uno solo. Es la idea base del procesamiento distribuido moderno.'},
+  {era:1,yr:'2006',ic:'cluster',t:'Nace Hadoop',
+   d:'Doug Cutting y Mike Cafarella crean una versión abierta inspirada en GFS y MapReduce.',
+   m:'Con respaldo de Yahoo, permite almacenar y procesar enormes volúmenes en clústeres de hardware común y acerca el Big Data a cualquier organización.'},
+  {era:1,yr:'2008',ic:'bubble',t:'Big Data entra al léxico',
+   d:'El término gana difusión técnica y empresarial; la revista Nature le dedica un número especial.',
+   m:'Hadoop pasa a ser proyecto de primer nivel de Apache y crece un ecosistema de herramientas libres como Hive y Pig.'},
+  {era:1,yr:'2010–14',ic:'cloud',t:'NoSQL, nube y Spark',
+   d:'Bases NoSQL, nubes públicas y Apache Spark vuelven el análisis masivo más rápido y accesible.',
+   m:'Spark nace en la Universidad de California en Berkeley, se vuelve proyecto principal de Apache en 2014 y acelera el procesamiento en memoria.'},
+  {era:2,yr:'2015–19',ic:'network',t:'IoT, redes sociales y ML',
+   d:'Sensores conectados, redes sociales masivas y aprendizaje automático convierten los datos en predicciones.',
+   m:'El aprendizaje profundo y las GPU permiten entrenar modelos con conjuntos de datos enormes: recomendación, visión por computador y traducción automática.'},
+  {era:2,yr:'2020→',ic:'spark',t:'IA generativa y tiempo real',
+   d:'Modelos generativos, arquitecturas lakehouse y cómputo en el borde acercan el análisis al dato.',
+   m:'Los modelos de lenguaje se entrenan con volúmenes enormes de datos. Las empresas unifican lagos y almacenes en lakehouses y procesan cerca de donde se generan los datos.'}
+];
+var needs=[
+  {g:'Infraestructura',c:'--cyan',items:[
+    {i:'disk',t:'Almacenamiento escalable',d:'Crecer de terabytes a petabytes sin rediseñar el sistema ni perder disponibilidad.'},
+    {i:'chip',t:'Procesamiento distribuido',d:'Repartir el trabajo entre muchos nodos para analizar en horas lo que una sola máquina tardaría semanas.'},
+    {i:'coin',t:'Costos e infraestructura',d:'Equilibrar nube, servidores propios y presupuesto para que el dato cueste menos que el valor que genera.'}]},
+  {g:'Manejo de datos',c:'--lime',items:[
+    {i:'link',t:'Integración de fuentes',d:'Unir bases de datos, sensores, archivos y APIs en una vista coherente.'},
+    {i:'filter',t:'Calidad y limpieza',d:'Depurar duplicados, vacíos y errores antes de que contaminen las decisiones.'},
+    {i:'pulse',t:'Análisis en tiempo real',d:'Responder mientras el dato llega: detectar un fraude en segundos, no al día siguiente.'}]},
+  {g:'Confianza y personas',c:'--coral',items:[
+    {i:'lock',t:'Seguridad y privacidad',d:'Proteger datos personales con cifrado, control de acceso y cumplimiento de normas como el RGPD.'},
+    {i:'scale',t:'Gobernanza y ética',d:'Definir quién es dueño del dato, cómo se usa y cómo se evitan sesgos en los modelos.'},
+    {i:'user',t:'Talento especializado',d:'Reunir científicos, ingenieros y analistas de datos que conviertan el volumen en respuestas.'}]}
+];
+var cats={
+  pers:{n:'Personas y sociedad',c:'--coral'},
+  neg:{n:'Negocios y consumo',c:'--cyan'},
+  ind:{n:'Industria y recursos',c:'--amber'}
+};
+var apps=[
+  {i:'heart',n:'Salud',d:'Historias clínicas y genómica para anticipar brotes y personalizar tratamientos.',k:'pers'},
+  {i:'bank',n:'Finanzas y banca',d:'Detección de fraude con tarjetas en milisegundos y evaluación de riesgo crediticio.',k:'neg'},
+  {i:'cart',n:'Retail y e-commerce',d:'Recomendaciones personalizadas y ajuste de precios e inventario según la demanda.',k:'neg'},
+  {i:'gear',n:'Manufactura (Industria 4.0)',d:'Sensores en máquinas que predicen fallas antes de que detengan la línea.',k:'ind'},
+  {i:'truck',n:'Transporte y logística',d:'Rutas dinámicas según tráfico y clima para reducir tiempos y combustible.',k:'ind'},
+  {i:'city',n:'Ciudades inteligentes y gobierno',d:'Semáforos adaptativos, recolección de residuos y planeación urbana con datos de sensores.',k:'pers'},
+  {i:'cap',n:'Educación',d:'Analítica del aprendizaje que detecta a tiempo a estudiantes en riesgo de abandono.',k:'pers'},
+  {i:'sprout',n:'Agricultura de precisión',d:'Riego y fertilización por zona con imágenes satelitales y sensores de suelo.',k:'ind'},
+  {i:'antenna',n:'Telecomunicaciones',d:'Predicción de congestión en la red y de clientes que podrían cancelar el servicio.',k:'neg'},
+  {i:'bolt',n:'Energía',d:'Redes eléctricas inteligentes que equilibran oferta y demanda con medidores en tiempo real.',k:'ind'},
+  {i:'megaphone',n:'Marketing y redes sociales',d:'Segmentación de audiencias y análisis de sentimiento sobre millones de publicaciones.',k:'neg'},
+  {i:'flask',n:'Ciencia e investigación',d:'Aceleradores de partículas, telescopios y secuenciación genética generan petabytes por analizar.',k:'pers'}
+];
+
+/* ---------- Metáforas gráficas de las 5 V ---------- */
+function svgWrap(inner){return '<svg viewBox="0 0 120 90" aria-hidden="true">'+inner+'</svg>'}
+function star(x,y,s,k){
+  return '<path class="spk" style="--k:'+k+'" fill="currentColor" d="M'+x+' '+(y-s)+'L'+(x+s*.28)+' '+(y-s*.28)+'L'+(x+s)+' '+y+'L'+(x+s*.28)+' '+(y+s*.28)+'L'+x+' '+(y+s)+'L'+(x-s*.28)+' '+(y+s*.28)+'L'+(x-s)+' '+y+'L'+(x-s*.28)+' '+(y-s*.28)+'Z"/>';
+}
+function figVol(){
+  var s='<path d="M10 86H110" stroke="currentColor" stroke-width="1.5" opacity=".35"/>',k=0;
+  [1,2,3,4,5,7].forEach(function(h,c){
+    for(var r=0;r<h;r++){
+      s+='<rect class="blk" style="--k:'+(k++)+';--o:'+(r===h-1?1:.5)+'" x="'+(16.5+c*15)+'" y="'+(75-r*11.5)+'" width="12" height="9" rx="2" fill="currentColor"/>';
+    }
+  });
+  return svgWrap(s);
+}
+function figVel(){
+  return svgWrap(
+    '<g class="streak" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".55" fill="none"><path d="M4 32h10M2 42h13M7 52h8"/></g>'+
+    '<path d="M18 72A42 42 0 0 1 102 72" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".2"/>'+
+    '<path class="arc" d="M18 72A42 42 0 0 1 102 72" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset=".28"/>'+
+    '<g class="needle"><path d="M60 72V40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></g>'+
+    '<circle cx="60" cy="72" r="5" fill="currentColor"/>'
+  );
+}
+function figVar(){
+  return svgWrap(
+    '<circle class="shp" style="--k:0" cx="26" cy="34" r="11" fill="var(--cyan)"/>'+
+    '<rect class="shp" style="--k:1" x="48" y="18" width="22" height="22" rx="4" fill="var(--amber)"/>'+
+    '<path class="shp" style="--k:2" d="M86 16L100 42H72z" fill="var(--coral)"/>'+
+    '<path class="shp" style="--k:3" d="M53 68L46.5 79.3H33.5L27 68L33.5 56.7H46.5z" fill="var(--lime)"/>'+
+    '<path class="shp" style="--k:4" d="M80 54L94 68L80 82L66 68z" fill="var(--violet)"/>'
+  );
+}
+function figVer(){
+  return svgWrap(
+    '<path class="shield" d="M60 8L92 19V44C92 62 78 75 60 82C42 75 28 62 28 44V19Z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path class="chk" d="M45 45L56 57L76 33" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="0"/>'
+  );
+}
+function figVal(){
+  return svgWrap(
+    '<path class="gem" d="M38 24H82L98 40L60 80L22 40Z" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path d="M22 40H98M38 24L48 40L60 24L72 40L82 24M48 40L60 80L72 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".7"/>'+
+    star(14,18,6,0)+star(106,16,5,1)+star(104,62,5,2)
+  );
+}
+var vs=[
+  {k:'Volumen',c:'--cyan',tag:'V original · 2001',fig:figVol,
+   d:'Cantidad masiva de datos generados y almacenados, medida en terabytes, petabytes y más.',
+   e:'Las redes sociales reciben millones de publicaciones, fotos y videos cada día.'},
+  {k:'Velocidad',c:'--amber',tag:'V original · 2001',fig:figVel,
+   d:'Ritmo al que los datos se generan, llegan y deben procesarse, muchas veces en tiempo real.',
+   e:'Un banco revisa cada pago con tarjeta en milisegundos para frenar un posible fraude.'},
+  {k:'Variedad',c:'--violet',tag:'V original · 2001',fig:figVar,
+   d:'Diversidad de formatos y fuentes: datos estructurados, semiestructurados y no estructurados.',
+   e:'Tablas de ventas, archivos JSON, correos, imágenes y audio analizados en conjunto.'},
+  {k:'Veracidad',c:'--coral',tag:'V añadida después',fig:figVer,
+   d:'Grado de calidad, precisión y confiabilidad de los datos; sin ella, las conclusiones se distorsionan.',
+   e:'Registros duplicados o sensores mal calibrados pueden llevar a decisiones equivocadas.'},
+  {k:'Valor',c:'--lime',tag:'V añadida después',fig:figVal,
+   d:'Conocimiento útil que el dato aporta para decidir mejor, ahorrar costos o crear productos nuevos.',
+   e:'Una cadena de tiendas usa su historial de ventas para decidir qué reponer en cada sucursal.'}
+];
+
+/* ---------- Línea de tiempo ---------- */
+(function(){
+  $('#era-strip').innerHTML=eras.map(function(e){
+    return '<div style="--era:var('+e.c+')"><b>'+e.name+'</b><span>'+e.range+'</span></div>';
+  }).join('');
+  var h='',last=-1;
+  ms.forEach(function(m,i){
+    if(m.era!==last){
+      var e=eras[m.era];
+      h+='<li class="era-head" style="--era:var('+e.c+')"><b>'+e.name+'</b><span>'+e.range+'</span></li>';
+      last=m.era;
+    }
+    h+='<li class="tl-item '+(i%2?'down':'up')+'" style="--i:'+i+';--era:var('+eras[m.era].c+')">'+
+      '<span class="node"></span>'+
+      '<div class="card" role="button" tabindex="0" aria-expanded="false" aria-controls="tl-panel" data-i="'+i+'">'+
+        '<div class="card-top"><span class="yr">'+m.yr+'</span><span class="cico">'+ico(m.ic)+'</span><span class="chev" aria-hidden="true"></span></div>'+
+        '<h3>'+m.t+'</h3><p>'+m.d+'</p>'+
+        '<div class="more"><div><p>'+m.m+'</p></div></div>'+
+      '</div></li>';
+  });
+  var track=$('#tl-track');
+  track.innerHTML=h;
+  var items=$$('.tl-item',track);
+  var panel=$('#tl-panel'),active=-1;
+
+  function paint(i){
+    var m=ms[i],e=eras[m.era];
+    panel.style.setProperty('--era','var('+e.c+')');
+    $('#tp-era').textContent=e.name;
+    $('#tp-yr').textContent=m.yr;
+    $('#tp-t').textContent=m.t;
+    $('#tp-d').textContent=m.d+' '+m.m;
+    if(!reduce){panel.classList.remove('swap');void panel.offsetWidth;panel.classList.add('swap')}
+  }
+  function setActive(i,fromClick){
+    if(mqM.matches&&fromClick&&i===active)i=-1;
+    if(i===active)return;
+    active=i;
+    items.forEach(function(li,k){
+      var on=k===i;
+      li.classList.toggle('active',on);
+      $('.card',li).setAttribute('aria-expanded',on?'true':'false');
+    });
+    if(i>=0)paint(i);
+  }
+  items.forEach(function(li,k){
+    var card=$('.card',li);
+    card.addEventListener('click',function(){setActive(k,true)});
+    card.addEventListener('keydown',function(ev){
+      if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();setActive(k,true)}
+    });
+    card.addEventListener('focus',function(){if(!mqM.matches)setActive(k,false)});
+    li.addEventListener('mouseenter',function(){if(!mqM.matches)setActive(k,false)});
+  });
+  setActive(2,false);
+})();
+
+/* ---------- Necesidades ---------- */
+$('#needs').innerHTML=needs.map(function(g){
+  return '<div class="ngroup" style="--c:var('+g.c+')"><h3>'+g.g+'</h3>'+
+    g.items.map(function(n){
+      return '<div class="nrow"><div class="nico">'+ico(n.i)+'</div><div><h4>'+n.t+'</h4><p>'+n.d+'</p></div></div>';
+    }).join('')+'</div>';
+}).join('');
+
+/* ---------- Aplicaciones + filtro ---------- */
+(function(){
+  $('#apps').innerHTML=apps.map(function(a){
+    var c=cats[a.k];
+    return '<article class="app" data-k="'+a.k+'" style="--c:var('+c.c+')">'+
+      '<div class="aico">'+ico(a.i)+'</div><h3>'+a.n+'</h3><p>'+a.d+'</p>'+
+      '<div class="acat"><i></i>'+c.n+'</div></article>';
+  }).join('');
+  var fh='<button type="button" class="fchip" data-f="all" aria-pressed="true"><i></i>Todos</button>';
+  Object.keys(cats).forEach(function(k){
+    fh+='<button type="button" class="fchip" data-f="'+k+'" aria-pressed="false" style="--c:var('+cats[k].c+')"><i></i>'+cats[k].n+'</button>';
+  });
+  $('#filters').innerHTML=fh;
+  var cards=$$('.app'),chips=$$('.fchip'),count=$('#count');
+  function apply(f){
+    var n=0;
+    cards.forEach(function(c){
+      var on=f==='all'||c.dataset.k===f;
+      c.classList.toggle('dim',!on);
+      if(on)n++;
+    });
+    chips.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.f===f?'true':'false')});
+    count.textContent='Resaltando '+n+' de '+cards.length;
+  }
+  chips.forEach(function(b){b.addEventListener('click',function(){apply(b.dataset.f)})});
+  apply('all');
+})();
+
+/* ---------- Las 5 V ---------- */
+(function(){
+  var play='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>';
+  $('#vgrid').innerHTML=vs.map(function(v){
+    return '<article class="vcard" style="--c:var('+v.c+')">'+
+      '<div class="vtop"><span class="vtag">'+v.tag+'</span><span class="vhint">'+play+'Animar</span></div>'+
+      '<button class="fig" type="button" aria-label="Animar la metáfora de '+v.k+'">'+v.fig()+'</button>'+
+      '<h3 class="vname">'+v.k+'</h3>'+
+      '<p class="vdef">'+v.d+'</p>'+
+      '<p class="vex"><b>Ejemplo</b>'+v.e+'</p></article>';
+  }).join('');
+  var cards=$$('.vcard');
+  function run(card){
+    if(reduce)return;
+    card.classList.remove('play');void card.offsetWidth;card.classList.add('play');
+  }
+  cards.forEach(function(c){c.addEventListener('click',function(){run(c)})});
+  if('IntersectionObserver' in window&&!reduce){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){if(e.isIntersecting){run(e.target);io.unobserve(e.target)}});
+    },{threshold:.6});
+    cards.forEach(function(c){io.observe(c)});
+  }
+})();
+
+/* ---------- Cifras de cierre ---------- */
+(function(){
+  var y=new Date().getFullYear();
+  var st=[
+    {n:y-2001,u:'años',c:'--amber',t:'desde que Laney definió las tres primeras V.'},
+    {n:y-2006,u:'años',c:'--cyan',t:'de Hadoop, el motor abierto del procesamiento distribuido.'},
+    {n:5,u:'V',c:'--violet',t:'volumen, velocidad, variedad, veracidad y valor.'}
+  ];
+  $('#stats').innerHTML=st.map(function(s){
+    return '<div class="stat" style="--c:var('+s.c+')"><b>'+s.n+'<small>'+s.u+'</small></b><p>'+s.t+'</p></div>';
+  }).join('');
+})();
+
+/* ---------- Aparición al desplazarse ---------- */
+(function(){
+  var els=$$('.rv');
+  if(!('IntersectionObserver' in window)||reduce){els.forEach(function(e){e.classList.add('in')});return}
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+  },{threshold:.05,rootMargin:'0px 0px -6% 0px'});
+  els.forEach(function(e){io.observe(e)});
+})();
+
+/* ---------- Encabezado: del dato crudo al valor ---------- */
+(function(){
+  var cv=$('#net');if(!cv||!cv.getContext)return;
+  var ctx=cv.getContext('2d'),W=0,H=0,parts=[],lanes=[],cols=null,raf=0,vis=true,last=0;
+  function rgb(h){
+    h=String(h).trim().replace('#','');
+    if(h.length===3)h=h.split('').map(function(x){return x+x}).join('');
+    var n=parseInt(h,16);
+    return isNaN(n)?[128,160,200]:[(n>>16)&255,(n>>8)&255,n&255];
+  }
+  function readColors(){
+    var cs=getComputedStyle(document.documentElement);
+    cols={a:rgb(cs.getPropertyValue('--cyan')),b:rgb(cs.getPropertyValue('--amber'))};
+  }
+  function size(){
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    W=cv.clientWidth;H=cv.clientHeight;
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    lanes=[0,1,2,3,4].map(function(i){return H*(.24+i*.13)});
+    var n=Math.round(Math.max(36,Math.min(130,W/9)));
+    parts=[];
+    for(var i=0;i<n;i++)parts.push({p:Math.random(),s:.00005+Math.random()*.00009,y0:Math.random()*H,l:i%5,ph:Math.random()*6.28,amp:10+Math.random()*34});
+  }
+  function mix(a,b,t){return Math.round(a+(b-a)*t)}
+  function draw(dt){
+    ctx.clearRect(0,0,W,H);
+    ctx.lineWidth=1;
+    ctx.strokeStyle='rgba('+cols.b.join(',')+',.16)';
+    lanes.forEach(function(y){ctx.beginPath();ctx.moveTo(W*.5,y);ctx.lineTo(W,y);ctx.stroke()});
+    for(var i=0;i<parts.length;i++){
+      var q=parts[i];
+      if(dt){q.p+=q.s*dt;if(q.p>1){q.p-=1;q.y0=Math.random()*H}}
+      var t=Math.min(1,Math.max(0,(q.p-.3)/.5));
+      var e=t*t*(3-2*t);
+      var x=q.p*W;
+      var y=q.y0*(1-e)+lanes[q.l]*e+Math.sin(q.ph+q.p*9)*q.amp*(1-e);
+      ctx.fillStyle='rgba('+mix(cols.a[0],cols.b[0],e)+','+mix(cols.a[1],cols.b[1],e)+','+mix(cols.a[2],cols.b[2],e)+','+(.3+.6*e).toFixed(2)+')';
+      ctx.beginPath();ctx.arc(x,y,1.3+e*1.9,0,6.283);ctx.fill();
+    }
+  }
+  function loop(ts){
+    var dt=Math.min(50,ts-last);last=ts;
+    if(vis)draw(dt);
+    raf=requestAnimationFrame(loop);
+  }
+  readColors();size();
+  if(reduce){draw(0)}else{raf=requestAnimationFrame(loop)}
+  if('ResizeObserver' in window){
+    new ResizeObserver(function(){size();if(reduce)draw(0)}).observe(cv.parentElement);
+  }
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){vis=es[0].isIntersecting}).observe(cv);
+  }
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){readColors();if(reduce)draw(0)});
+  new MutationObserver(function(){readColors();if(reduce)draw(0)}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+})();
+</script>
+</body>
+</html>
